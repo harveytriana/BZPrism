@@ -1,0 +1,43 @@
+﻿@page "/prism-demo"
+@inject IJSRuntime JSRuntime
+@inject HttpClient _httpClient
+
+<h3>Prism Demo</h3>
+<hr />
+@if (html == null) {
+    <div>
+        Loading...
+    </div>
+}
+else {
+    <div style="display: @display;">
+        @((MarkupString)html)
+        <hr />
+    </div>
+}
+
+@code {
+
+    string display = "none";
+    string html;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var content = await _httpClient.GetStringAsync("sample-data/sample.md");
+        //// get html
+        html = MarkdownParser.ParseForPrim(content, true);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) {
+            await Task.Delay(300); // important!
+            await JSRuntime.InvokeVoidAsync("Prism.highlightAll");
+
+            await Task.Delay(200);
+            display = "display";
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
